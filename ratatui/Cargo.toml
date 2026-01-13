@@ -57,6 +57,10 @@ serde = [
   "ratatui-termwiz?/serde",
 ]
 
+serde-color-fmt-v2 = [
+  "ratatui-core/serde-color-fmt-v2"
+]
+
 ## enables layout cache
 layout-cache = ["std", "ratatui-core/layout-cache"]
 

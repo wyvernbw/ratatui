@@ -58,6 +58,9 @@ scrolling-regions = []
 ## This is useful if you want to save themes to a file.
 serde = ["std", "dep:serde", "bitflags/serde", "compact_str/serde"]
 
+## use backwards incompatible format for colors
+serde-color-fmt-v2 = ["serde"]
+
 [dependencies]
 anstyle = { workspace = true, optional = true }
 bitflags.workspace = true

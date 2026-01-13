@@ -220,6 +220,7 @@ impl<'de> serde::Deserialize<'de> for Color {
         /// The deserialization implementation utilises a `Helper` struct
         /// to be able to support both formats for backwards compatibility.
         #[derive(serde::Deserialize)]
+        #[cfg(not(feature = "serde-color-fmt-v2"))]
         enum ColorWrapper {
             Rgb(u8, u8, u8),
             Indexed(u8),
@@ -227,19 +228,34 @@ impl<'de> serde::Deserialize<'de> for Color {
 
         #[derive(serde::Deserialize)]
         #[serde(untagged)]
+        #[cfg(not(feature = "serde-color-fmt-v2"))]
         enum ColorFormat {
             V2(String),
             V1(ColorWrapper),
         }
 
+        #[derive(serde::Deserialize)]
+        #[cfg(feature = "serde-color-fmt-v2")]
+        struct ColorFormat(String);
+
         let multi_type = ColorFormat::deserialize(deserializer)
             .map_err(|err| serde::de::Error::custom(format!("Failed to parse Colors: {err}")))?;
-        match multi_type {
-            ColorFormat::V2(s) => FromStr::from_str(&s).map_err(serde::de::Error::custom),
-            ColorFormat::V1(color_wrapper) => match color_wrapper {
-                ColorWrapper::Rgb(red, green, blue) => Ok(Self::Rgb(red, green, blue)),
-                ColorWrapper::Indexed(index) => Ok(Self::Indexed(index)),
-            },
+
+        #[cfg(not(feature = "serde-color-fmt-v2"))]
+        {
+            match multi_type {
+                ColorFormat::V2(s) => FromStr::from_str(&s).map_err(serde::de::Error::custom),
+                ColorFormat::V1(color_wrapper) => match color_wrapper {
+                    ColorWrapper::Rgb(red, green, blue) => Ok(Self::Rgb(red, green, blue)),
+                    ColorWrapper::Indexed(index) => Ok(Self::Indexed(index)),
+                },
+            }
+        }
+
+        #[cfg(feature = "serde-color-fmt-v2")]
+        {
+            let ColorFormat(s) = multi_type;
+            FromStr::from_str(&s).map_err(serde::de::Error::custom)
         }
     }
 }
